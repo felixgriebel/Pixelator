@@ -81,15 +81,9 @@ public class Pixelator {
         System.out.println("press a number to add a filter");
         String fil = new Scanner(System.in).next();
         switch (fil) {
-            case "1" -> {
-                filter = 1;
-            }
-            case "2" -> {
-                filter = 2;
-            }
-            case "3" -> {
-                filter = 3;
-            }
+            case "1" -> filter = 1;
+            case "2" -> filter = 2;
+            case "3" -> filter = 3;
         }
 
         System.out.println("Do you want to remain the same pixel size?[y/n]");
@@ -133,8 +127,7 @@ public class Pixelator {
         File outputfile = new File(name + ".png");
         try {
             ImageIO.write(theImage, "png", outputfile);
-        } catch (IOException e1) {
-
+        } catch (IOException ignored) {
         }
     }
 
@@ -183,7 +176,7 @@ public class Pixelator {
         g /= count;
         b /= count;
 
-        int theValue = 0;
+        int theValue;
         if (wantGrey) {
             int valx = (int) ((0.299 * r) + (0.587 * g) + (0.114 * b));
             theValue = (valx << 16) ^ (valx << 8) ^ (valx);
