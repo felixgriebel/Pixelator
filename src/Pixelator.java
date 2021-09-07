@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Scanner;
 import javax.imageio.ImageIO;
 
@@ -79,20 +80,34 @@ public class Pixelator {
 
         int[][] pixel2 = new int[newWidth][newHeight];
 
-        for (int y=0;y<height;y=y+div){
-            for (int x=0;x<width;x=x+div){
-                pixel2[x/div][y/div]=getValue(pixel,div,x,y);
+        System.out.println("press 1 to remain the same pixel size");
+        String s = new Scanner(System.in).next();
+
+        if (s.equals("1")){
+            for (int y=0;y<height;y=y+div){
+                for (int x=0;x<width;x=x+div){
+                    getValueSameSize(pixel,div,x,y);
+                }
+            }
+            pixel2=pixel;
+        }else{
+            for (int y=0;y<height;y=y+div){
+                for (int x=0;x<width;x=x+div){
+                    pixel2[x/div][y/div]=getValue(pixel,div,x,y);
+                }
             }
         }
+
+
 
 
         //TODO colors in pixel[][]
 
         //width und height modifizieren
-        BufferedImage theImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_RGB);
+        BufferedImage theImage = new BufferedImage(pixel2.length, pixel2[0].length, BufferedImage.TYPE_INT_RGB);
 
-        for (int i = 0; i < newWidth; i++) {
-            for (int j = 0; j < newHeight; j++) {
+        for (int i = 0; i < pixel2.length; i++) {
+            for (int j = 0; j < pixel2[0].length; j++) {
 
                 theImage.setRGB(i, j, pixel2[i][j]);
             }
@@ -133,6 +148,42 @@ public class Pixelator {
         }
 
         return(int) ((r<<16)^(g<<8)^(b));
+
+    }
+
+    private static void getValueSameSize(int[][] field, int size, int currX, int currY){
+        long r=0;
+        long g=0;
+        long b=0;
+
+
+        int count=size*size;
+        for (int y=currY;y<currY+size;y++){
+            for (int x= currX;x<currX+size;x++){
+                b=b+(field[x][y]&255);
+                g=g+((field[x][y]>>8)&255);
+                r=r+((field[x][y]>>16)&255);
+            }
+        }
+        r/=count;
+        g/=count;
+        b/=count;
+
+        int theValue=0;
+        if (wantGrey){
+            int valx = (int)((0.299*r) + (0.587*g) + (0.114*b));
+            theValue = (int) ((valx<<16)^(valx<<8)^(valx));
+        }
+
+        theValue = (int) ((r<<16)^(g<<8)^(b));
+
+
+        for (int y=currY;y<currY+size;y++){
+            for (int x= currX;x<currX+size;x++){
+                field[x][y]=theValue;
+            }
+        }
+
 
     }
 }
