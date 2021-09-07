@@ -102,6 +102,12 @@ public class Pixelator {
                 }
             }
             pixel2 = pixel;
+
+
+            System.out.println("Change every second row?[y/n]");
+            String ent = new Scanner(System.in).next().toLowerCase();
+            if (ent.equals("y")) switchArr(pixel2);
+
         } else {
             for (int y = 0; y < height; y = y + div) {
                 for (int x = 0; x < width; x = x + div) {
@@ -226,5 +232,18 @@ public class Pixelator {
         }
 
 
+    }
+
+    private static void switchArr(int[][] field) {
+        for (int x = 0; x < field.length; x++) {
+            if (x % 2 == 0) {
+                int[] temp = new int[field[x].length];
+
+                for (int y = 0; y < field[x].length; y++) {
+                    temp[(field[x].length - 1) - y] = field[x][y];
+                }
+                field[x] = temp;
+            }
+        }
     }
 }
