@@ -10,21 +10,52 @@ import java.util.List;
 import java.util.Scanner;
 
 
+//1: AUSWAHL DES MODUS
+//2: FILEEINGABE OHNE .JPEG .JPG .PNG
+//3: BESCHREIBUNGEN BEI ENTSCHEIDUNGEN
+//TODO 4: EIN SCANNER FÜR TRANSFORMPIC?
+//TODO 5: MEHRERE FILTER ANWENDBAR -> schlecht implementiert
+//TODO 6: PIXELANZAHL ERHÖHEN MIT NEUER METHODE
+
 public class Pixelator {
     //private static boolean wantGrey = false;
     private static int filter = 0;
+    private static boolean hardChosen = false;
+    private static int newHard = 255;
+    private static int multiplikator=1;
 
     public static void main(String[] args) throws IOException {
-        transformPic();
+        System.out.println("what do you want to do?");
+        System.out.println("1 - transform a pic");
+        System.out.println("2 - create a random pixel-pic");
+        System.out.println("3 - create a rainbow pic");
+        String inout = new Scanner(System.in).next();
+        if (inout.equals("1")) transformPic();
+        if (inout.equals("2")) createRandom();
+        if (inout.equals("3")) createRainbow();
     }
 
 
     public static void transformPic() throws IOException {
         String path = "null";
+
         System.out.println("Write a filename");
         Scanner si = new Scanner(System.in);
-        while (!Files.isReadable(Path.of(path))) {
+        while (true) {
             path = si.next();
+            if (Files.isReadable(Path.of(path + ".jpeg"))) {
+                path = new String(path + ".jpeg");
+                break;
+            }
+            if (Files.isReadable(Path.of(path + ".jpg"))) {
+                path = new String(path + ".jpg");
+                break;
+            }
+            if (Files.isReadable(Path.of(path + ".png"))) {
+                path = new String(path + ".png");
+                break;
+            }
+
         }
 
 
@@ -76,25 +107,39 @@ public class Pixelator {
         int newWidth = width / div;
 
 
-        //transform pixel[][] to pixel2[][]
-
         int[][] pixel2 = new int[newWidth][newHeight];
 
+        System.out.println("1 - / filter nicht so stark");
+        System.out.println("2 - erhellender filter");
+        System.out.println("3 - \\ filter  stark");
+        System.out.println("4 - grau filter");
+        System.out.println("5 -  Auflösung so hoch wie pixelanzahl");
+        System.out.println("6 - löscht rot filter");
+        System.out.println("7 - \\ filter nicht so stark");
+        System.out.println("8 - outline filter");
+        System.out.println("9 - mult filter");
+        System.out.println("10 - dependencies filter");
         System.out.println("press a number to add a filter");
         String fil = new Scanner(System.in).next();
-        switch (fil) {
-            case "1" -> filter = 1;
-            case "2" -> filter = 2;
-            case "3" -> filter = 3;
-            case "4" -> filter = 4;
-            case "5" -> filter = 5;
-            case "6" -> filter = 6;
-            case "7" -> filter = 7;
+        if (fil.contains("1")) filter = 1;
+        if (fil.contains("2")) filter = 2;
+        if (fil.contains("3")) filter = 3;
+        if (fil.contains("4")) filter = 4;
+        if (fil.contains("5")) filter = 5;
+        if (fil.contains("6")) filter = 6;
+        if (fil.contains("7")) filter = 7;
+        if (fil.contains("8")) filter = 8;
+        if (fil.contains("9")){
+            filter = 9;
+            try{
+                System.out.println("Please input a multiplikator:");
+                multiplikator= new Scanner(System.in).nextInt();
+            }catch(Exception ignored){}
         }
+        if (fil.contains("10")) filter = 10;
 
 
-
-        if (filter!=5) {
+        if (filter != 5) {
             for (int y = 0; y < height; y = y + div) {
                 for (int x = 0; x < width; x = x + div) {
                     getValueSameSize(pixel, div, x, y);
@@ -103,42 +148,45 @@ public class Pixelator {
             pixel2 = pixel;
 
 
+            System.out.println("0 - change rows in a distance");
+            System.out.println("1-5 - change a bundle of ... rows");
+            System.out.println("6 - change rows vertical");
             System.out.println("Change row?");
-            try{
+            try {
                 int ent = new Scanner(System.in).nextInt();
-                switch(ent){
-                    case 0 ->{
+                switch (ent) {
+                    case 0 -> {
                         Scanner sin = new Scanner(System.in);
 
-                        int start=0;
-                        int end=0;
+                        int start = 0;
+                        int end = 0;
                         System.out.println("from:");
-                        start=sin.nextInt();
+                        start = sin.nextInt();
                         System.out.println("to (excluded):");
-                        end=sin.nextInt();
-                        switchArrDis(pixel2,start,end);
+                        end = sin.nextInt();
+                        switchArrDis(pixel2, start, end);
 
                     }
-                    case 1 ->{
+                    case 1 -> {
                         switchArr(pixel2);
                     }
-                    case 2 ->{
+                    case 2 -> {
                         switchArr2(pixel2);
                     }
-                    case 3 ->{
+                    case 3 -> {
                         switchArr3(pixel2);
                     }
-                    case 4 ->{
+                    case 4 -> {
                         switchArr4(pixel2);
                     }
-                    case 5 ->{
+                    case 5 -> {
                         switchArr5(pixel2);
                     }
-                    case 6 ->{
+                    case 6 -> {
                         switchArrVert(pixel2);
                     }
                 }
-            }catch(Exception ignored){
+            } catch (Exception ignored) {
 
             }
 
@@ -152,7 +200,6 @@ public class Pixelator {
         }
 
 
-
         //width und height modifizieren
         BufferedImage theImage = new BufferedImage(pixel2.length, pixel2[0].length, BufferedImage.TYPE_INT_RGB);
 
@@ -163,7 +210,7 @@ public class Pixelator {
             }
         }
 
-        File outputfile = new File( "output.png");
+        File outputfile = new File("output.png");
         try {
             ImageIO.write(theImage, "png", outputfile);
         } catch (IOException ignored) {
@@ -188,7 +235,7 @@ public class Pixelator {
         g /= count;
         b /= count;
 
-        if (filter==4) {
+        if (filter == 4) {
             int valx = (int) ((0.299 * r) + (0.587 * g) + (0.114 * b));
             return (valx << 16) ^ (valx << 8) ^ (valx);
         }
@@ -216,7 +263,7 @@ public class Pixelator {
         b /= count;
 
         int theValue;
-        if (filter==4) {
+        if (filter == 4) {
             int valx = (int) ((0.299 * r) + (0.587 * g) + (0.114 * b));
             theValue = (valx << 16) ^ (valx << 8) ^ (valx);
 
@@ -253,8 +300,8 @@ public class Pixelator {
                 }
             }
 
-            if(filter==6){
-                if (r>g&&r>b)r=0;
+            if (filter == 6) {
+                if (r > g && r > b) r = 0;
             }
             if (filter == 7) {
                 if ((currX + (currY * 13)) % 3 == 0) {
@@ -268,7 +315,37 @@ public class Pixelator {
                 }
             }
 
+            if (filter == 8) {
+
+
+                if (!hardChosen) {
+                    try {
+                        System.out.println("What level do you wish? 1-255");
+                        newHard = new Scanner(System.in).nextInt();
+                        hardChosen = true;
+                    } catch (Exception ignored) {
+                    }
+                }
+
+                if (newHard > 255 || newHard < 1) newHard = 255;
+
+                int temp = (currX + (21 * currY)) % newHard;
+                r = r + temp % 256;
+                g = g + temp % 256;
+                b = b + temp % 256;
+            }
+            if (filter==10){
+                long tempor=r;
+                r=g;
+                g=b;
+                b=tempor;
+            }
+
             theValue = (int) ((r << 16) ^ (g << 8) ^ (b));
+
+            if(filter==9){
+                theValue=(theValue*multiplikator)^(16777215);
+            }
         }
 
 
@@ -280,6 +357,11 @@ public class Pixelator {
 
 
     }
+
+
+    /**
+     * CREATE-METHODS
+     **/
 
     public static void createRandom() {
         Scanner sc = new Scanner(System.in);
@@ -363,6 +445,7 @@ public class Pixelator {
         } catch (IOException ignored) {
         }
     }
+
     public static void createRainbow() {
         Scanner sc = new Scanner(System.in);
         int height = 0;
@@ -392,39 +475,39 @@ public class Pixelator {
         for (int x = 0; x < field.length; x++) {
             for (int y = 0; y < field[0].length; y++) {
 
-                switch((x*("df"+y+"sd"+y).hashCode()%11)){
-                    case 0 ->{
-                        field[x][y]=(255<<16)^(0<<8)^(0);
+                switch ((x * ("df" + y + "sd" + y).hashCode() % 11)) {
+                    case 0 -> {
+                        field[x][y] = (255 << 16) ^ (0 << 8) ^ (0);
                     }
-                    case 1 ->{
-                        field[x][y]=(234<<16)^(68<<8)^(17);
+                    case 1 -> {
+                        field[x][y] = (234 << 16) ^ (68 << 8) ^ (17);
                     }
-                    case 2 ->{
-                        field[x][y]=(238<<16)^(138<<8)^(1);
+                    case 2 -> {
+                        field[x][y] = (238 << 16) ^ (138 << 8) ^ (1);
                     }
-                    case 3 ->{//gelb
-                        field[x][y]=(255<<16)^(255<<8)^(0);
+                    case 3 -> {//gelb
+                        field[x][y] = (255 << 16) ^ (255 << 8) ^ (0);
                     }
-                    case 4 ->{
-                        field[x][y]=(138<<16)^(250<<8)^(88);
+                    case 4 -> {
+                        field[x][y] = (138 << 16) ^ (250 << 8) ^ (88);
                     }
-                    case 5 ->{//green
-                        field[x][y]=(42<<16)^(176<<8)^(40);
+                    case 5 -> {//green
+                        field[x][y] = (42 << 16) ^ (176 << 8) ^ (40);
                     }
-                    case 6 ->{
-                        field[x][y]=(1<<16)^(255<<8)^(251);
+                    case 6 -> {
+                        field[x][y] = (1 << 16) ^ (255 << 8) ^ (251);
                     }
-                    case 7 ->{
-                        field[x][y]=(64<<16)^(163<<8)^(250);
+                    case 7 -> {
+                        field[x][y] = (64 << 16) ^ (163 << 8) ^ (250);
                     }
-                    case 8 ->{//blue
-                        field[x][y]=(5<<16)^(40<<8)^(126);
+                    case 8 -> {//blue
+                        field[x][y] = (5 << 16) ^ (40 << 8) ^ (126);
                     }
-                    case 9 ->{
-                        field[x][y]=(51<<16)^(0<<8)^(134);
+                    case 9 -> {
+                        field[x][y] = (51 << 16) ^ (0 << 8) ^ (134);
                     }
-                    case 10 ->{
-                        field[x][y]=(255<<16)^(0<<8)^(255);
+                    case 10 -> {
+                        field[x][y] = (255 << 16) ^ (0 << 8) ^ (255);
                     }
                 }
             }
@@ -449,22 +532,9 @@ public class Pixelator {
     }
 
 
-
-
-
-    /** SWITCH ARRAY METHODS WITH DIFFERENT WIDTH
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     * **/
+    /**
+     * SWITCH ARRAY METHODS WITH DIFFERENT WIDTH
+     **/
     private static void switchArr(int[][] field) {
         for (int x = 0; x < field.length; x++) {
             if (x % 2 == 0) {
@@ -480,7 +550,7 @@ public class Pixelator {
 
     private static void switchArr2(int[][] field) {
         for (int x = 0; x < field.length; x++) {
-            if (x % 4==0||x % 4==1) {
+            if (x % 4 == 0 || x % 4 == 1) {
                 int[] temp = new int[field[x].length];
 
                 for (int y = 0; y < field[x].length; y++) {
@@ -490,9 +560,10 @@ public class Pixelator {
             }
         }
     }
+
     private static void switchArr3(int[][] field) {
         for (int x = 0; x < field.length; x++) {
-            if (x % 6==0||x % 6==1||x % 6==2) {
+            if (x % 6 == 0 || x % 6 == 1 || x % 6 == 2) {
                 int[] temp = new int[field[x].length];
 
                 for (int y = 0; y < field[x].length; y++) {
@@ -502,9 +573,10 @@ public class Pixelator {
             }
         }
     }
+
     private static void switchArr4(int[][] field) {
         for (int x = 0; x < field.length; x++) {
-            if (x % 8==0||x % 8==1||x % 8==2||x % 8==3) {
+            if (x % 8 == 0 || x % 8 == 1 || x % 8 == 2 || x % 8 == 3) {
                 int[] temp = new int[field[x].length];
 
                 for (int y = 0; y < field[x].length; y++) {
@@ -514,9 +586,10 @@ public class Pixelator {
             }
         }
     }
+
     private static void switchArr5(int[][] field) {
         for (int x = 0; x < field.length; x++) {
-            if (x % 10==0||x % 10==1||x % 10==2||x % 10==3||x % 10==4) {
+            if (x % 10 == 0 || x % 10 == 1 || x % 10 == 2 || x % 10 == 3 || x % 10 == 4) {
                 int[] temp = new int[field[x].length];
 
                 for (int y = 0; y < field[x].length; y++) {
@@ -529,12 +602,12 @@ public class Pixelator {
 
     private static void switchArrDis(int[][] field, int start, int end) {
         for (int x = start; x < end; x++) {
-                int[] temp = new int[field[x].length];
+            int[] temp = new int[field[x].length];
 
-                for (int y = 0; y < field[x].length; y++) {
-                    temp[(field[x].length - 1) - y] = field[x][y];
-                }
-                field[x] = temp;
+            for (int y = 0; y < field[x].length; y++) {
+                temp[(field[x].length - 1) - y] = field[x][y];
+            }
+            field[x] = temp;
 
         }
     }
@@ -545,11 +618,10 @@ public class Pixelator {
             if (y % 2 == 0) {
 
 
-
-                for (int x = 0; x <= field.length/2; x++) {
-                    int temp=field[x][y];
-                    field[x][y]=field[(field.length-1)-x][y];
-                    field[(field.length-1)-x][y]=temp;
+                for (int x = 0; x <= field.length / 2; x++) {
+                    int temp = field[x][y];
+                    field[x][y] = field[(field.length - 1) - x][y];
+                    field[(field.length - 1) - x][y] = temp;
 
                 }
 
