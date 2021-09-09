@@ -11,7 +11,6 @@ import java.util.Scanner;
 
 
 //TODO 5: MEHRERE FILTER ANWENDBAR -> schlecht implementiert
-//TODO 6: PIXELANZAHL ERHÖHEN MIT NEUER METHODE
 
 public class Pixelator {
     //private static boolean wantGrey = false;
@@ -25,10 +24,15 @@ public class Pixelator {
         System.out.println("1 - transform a pic");
         System.out.println("2 - create a random pixel-pic");
         System.out.println("3 - create a rainbow pic");
+        System.out.println("4 - upgrade a pic");
+        System.out.println("5 - smooth out a pic");
         String inout = sc.next();
         if (inout.equals("1")) transformPic();
         if (inout.equals("2")) createRandom();
         if (inout.equals("3")) createRainbow();
+        if (inout.equals("4")) upgrade();
+        if (inout.equals("5")) smoothup();
+
     }
 
 
@@ -583,7 +587,7 @@ public class Pixelator {
     }
 
     private static void switchArrVert(int[][] field) {
-        System.out.println(field[0][0]);
+
         for (int y = 0; y < field[0].length; y++) {
             if (y % 2 == 0) {
 
@@ -597,6 +601,258 @@ public class Pixelator {
 
             }
         }
-        System.out.println(field[0][0]);
+
+    }
+
+    public static void upgrade() throws IOException {
+        String path;
+
+        System.out.println("Write a filename");
+        while (true) {
+            path = sc.next();
+            if (Files.isReadable(Path.of(path + ".jpeg"))) {
+                path = (path + ".jpeg");
+                break;
+            }
+            if (Files.isReadable(Path.of(path + ".jpg"))) {
+                path = (path + ".jpg");
+                break;
+            }
+            if (Files.isReadable(Path.of(path + ".png"))) {
+                path = (path + ".png");
+                break;
+            }
+
+        }
+
+
+        File file = new File(path);
+
+
+        BufferedImage img = ImageIO.read(file);
+        int width = img.getWidth();
+        int height = img.getHeight();
+        int[][] pixel = new int[width][height];
+        Raster raster = img.getData();
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                int[] rgb = new int[5];
+                raster.getPixel(i, j, rgb);
+                pixel[i][j] = (rgb[0] << 16) ^ (rgb[1] << 8) ^ (rgb[2]);
+            }
+        }
+
+
+        System.out.println("h:" + height + " w:" + width);
+        List<Integer> liste = new ArrayList<>();
+        liste.add(1);
+        liste.add(2);
+        liste.add(3);
+        liste.add(5);
+        liste.add(7);
+
+        System.out.println("possible multiplikators are: " + liste + ", please pick a dividor");
+
+        int mul = 0;
+
+        while (!liste.contains(mul)) {
+
+            try {
+                mul = sc.nextInt();
+            } catch (Exception e) {
+                mul = 0;
+            }
+        }
+
+
+        System.out.println("New Dimensions will be -> h:" + (height * mul) + " w:" + (width * mul));
+
+        int newHeight = height * mul;
+        int newWidth = width * mul;
+
+
+        int[][] pixel2 = new int[newWidth][newHeight];
+
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                getValueBiggerSize(pixel, pixel2, mul, x, y);
+            }
+        }
+
+
+        //width und height modifizieren
+        BufferedImage theImage = new BufferedImage(pixel2.length, pixel2[0].length, BufferedImage.TYPE_INT_RGB);
+
+        for (int i = 0; i < pixel2.length; i++) {
+            for (int j = 0; j < pixel2[0].length; j++) {
+
+                theImage.setRGB(i, j, pixel2[i][j]);
+            }
+        }
+
+        File outputfile = new File("output.png");
+        try {
+            ImageIO.write(theImage, "png", outputfile);
+        } catch (IOException ignored) {
+        }
+    }
+
+    private static void getValueBiggerSize(int[][] field, int[][] newField, int multiplikator, int currX, int currY) {
+        int temp = field[currX][currY];
+        for (int y = currY * multiplikator; y < (currY * multiplikator) + multiplikator; y++) {
+            for (int x = currX * multiplikator; x < (currX * multiplikator) + multiplikator; x++) {
+                newField[x][y] = temp;
+            }
+        }
+    }
+
+    public static void smoothup() throws IOException {
+        String path;
+
+        System.out.println("Write a filename");
+        while (true) {
+            path = sc.next();
+            if (Files.isReadable(Path.of(path + ".jpeg"))) {
+                path = (path + ".jpeg");
+                break;
+            }
+            if (Files.isReadable(Path.of(path + ".jpg"))) {
+                path = (path + ".jpg");
+                break;
+            }
+            if (Files.isReadable(Path.of(path + ".png"))) {
+                path = (path + ".png");
+                break;
+            }
+
+        }
+
+
+        File file = new File(path);
+
+
+        BufferedImage img = ImageIO.read(file);
+        int width = img.getWidth();
+        int height = img.getHeight();
+        int[][] pixel = new int[width][height];
+        Raster raster = img.getData();
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                int[] rgb = new int[5];
+                raster.getPixel(i, j, rgb);
+                pixel[i][j] = (rgb[0] << 16) ^ (rgb[1] << 8) ^ (rgb[2]);
+            }
+        }
+
+
+        System.out.println("h:" + height + " w:" + width);
+
+
+        System.out.println("New Dimensions will be -> h:" + (height + (height - 1)) + " w:" + (width + (width - 1)));
+
+        int newHeight = height + (height - 1);
+        int newWidth = width + (width - 1);
+
+
+        int[][] pixel2 = new int[newWidth][newHeight];
+
+        for (int y = 0; y < height; y = y + 2) {
+            for (int x = 0; x < width; x = x + 2) {
+                //set real pixel
+                int newX = x + (x - 1);
+                int newY = y + (y - 1);
+
+                if (newX < 0) newX = 0;
+                if (newY < 0) newY = 0;
+                pixel2[newX][newY] = pixel[x][y];
+
+                //set vertical smooth
+
+                if (x != (width - 1)) {
+
+
+                    int r1 = (pixel[x][y] >> 16) & 255;
+                    int g1 = (pixel[x][y] >> 8) & 255;
+                    int b1 = pixel[x][y] & 255;
+
+
+                    int r2 = (pixel[x + 1][y] >> 16) & 255;
+                    int g2 = (pixel[x + 1][y] >> 8) & 255;
+                    int b2 = pixel[x + 1][y] & 255;
+
+
+                    r1 = (r1 + r2) / 2;
+                    g1 = (g1 + g2) / 2;
+                    b1 = (b1 + b2) / 2;
+
+                    pixel2[(newX) + 1][newY] = (r1 << 16) ^ (g1 << 8) ^ (b1);
+                }
+
+                //set horizontal smooth
+                if (y != (height - 1)) {
+                    int r1 = (pixel[x][y] >> 16) & 255;
+                    int g1 = (pixel[x][y] >> 8) & 255;
+                    int b1 = pixel[x][y] & 255;
+
+
+                    int r2 = (pixel[x][y + 1] >> 16) & 255;
+                    int g2 = (pixel[x][y + 1] >> 8) & 255;
+                    int b2 = pixel[x][y + 1] & 255;
+
+                    r1 = (r1 + r2) / 2;
+                    g1 = (g1 + g2) / 2;
+                    b1 = (b1 + b2) / 2;
+
+                    pixel2[newX][newY + 1] = (r1 << 16) ^ (g1 << 8) ^ (b1);
+                }
+
+                //set middle smooth
+                if (y != (height - 1) && x != (width - 1)) {
+                    int r1 = (pixel[x][y] >> 16) & 255;
+                    int g1 = (pixel[x][y] >> 8) & 255;
+                    int b1 = pixel[x][y] & 255;
+
+
+                    int r2 = (pixel[x + 1][y] >> 16) & 255;
+                    int g2 = (pixel[x + 1][y] >> 8) & 255;
+                    int b2 = pixel[x + 1][y] & 255;
+
+                    int r3 = (pixel[x][y + 1] >> 16) & 255;
+                    int g3 = (pixel[x][y + 1] >> 8) & 255;
+                    int b3 = pixel[x][y + 1] & 255;
+
+
+                    int r4 = (pixel[x + 1][y + 1] >> 16) & 255;
+                    int g4 = (pixel[x + 1][y + 1] >> 8) & 255;
+                    int b4 = pixel[x + 1][y + 1] & 255;
+
+                    r1 = (r1 + r2 + r3 + r4) / 4;
+                    g1 = (g1 + g2 + g3 + g4) / 4;
+                    b1 = (b1 + b2 + b3 + b4) / 4;
+
+                    pixel2[newX + 1][newY + 1] = (r1 << 16) ^ (g1 << 8) ^ (b1);
+                }
+            }
+
+
+            //width und height modifizieren
+            BufferedImage theImage = new BufferedImage(pixel2.length, pixel2[0].length, BufferedImage.TYPE_INT_RGB);
+
+            for (int i = 0; i < pixel2.length; i++) {
+                for (int j = 0; j < pixel2[0].length; j++) {
+
+                    theImage.setRGB(i, j, pixel2[i][j]);
+                }
+            }
+
+            File outputfile = new File("output.png");
+            try {
+                ImageIO.write(theImage, "png", outputfile);
+            } catch (IOException ignored) {
+            }
+        }
+
+
     }
 }
